@@ -3,5 +3,6 @@ brainf**k interpreter and visualizer in C
 note: this is early WIP, the code is horrible and don't read it please
 
 todo:
+    take input from user in ncurses
     SDL2 backend
     refactor code

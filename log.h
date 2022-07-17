@@ -1,3 +1,4 @@
+#pragma once
 #include <stdnoreturn.h>
 
 #define panic(...) _panic(__FILE__, __LINE__, __VA_ARGS__)

@@ -4,11 +4,13 @@
 #include "log.h"
 #include "bf.h"
 #include "tui.h"
+#include "str.h"
+#include "xmalloc.h"
 
 struct tui *
-tui_init(bf *bf)
+tui_init(struct bf *bf)
 {
-    struct tui *ui = malloc(sizeof(struct tui*));
+    struct tui *ui = xmalloc(sizeof(struct tui*));
     ui->bf = bf;
     ui->offset = 0;
     return ui;
@@ -36,16 +38,14 @@ void
 tui_draw_instruction(struct tui *ui)
 {
     const int y = 8;
-    int truncate = ui->w - 10;
+    int truncate = ui->w - 10, n;
     char *curr = ui->bf->iptr;
-    char c = *curr;
-    int idx = curr - ui->bf->program;
-    int n;
-    mvprintw(y, 0, "program: %n", &n);
+    size_t idx = bf_inst_idx(ui->bf);
+    mvprintw(y, 0, "instruction: %n", &n);
     if (idx > truncate)
         mvprintw(y, n, "%s", curr - truncate);
     else 
-        mvprintw(y, n, "%s", ui->bf->program);
+        mvprintw(y, n, "%s", ui->bf->inst->b);
     if (curr == NULL) return;
     attron(A_REVERSE);
     mvprintw(y, n+idx, "%c", *curr);
@@ -96,7 +96,7 @@ tui_run(struct tui *ui)
     int ch;
     mmask_t old;
     initscr();
-    keypad(stdscr, TRUE);
+    keypad(stdscr, true);
     noecho();
     curs_set(0);
     start_color();
@@ -117,12 +117,13 @@ tui_run(struct tui *ui)
 
         /* draw cells */
         for (int i = 0; i < ui->ncell; i++) {
-            bool iscurrent = ui->bf->mem + i + ui->offset == ui->bf->dptr;
+            size_t midx = i + ui->offset;
+            bool iscurrent = midx == bf_data_idx(ui->bf);
             if (iscurrent)
                 attron(COLOR_PAIR(2));
             rect(stdscr, 0, i * 7, 2, i * 7 + 6);
-            mvprintw(1, i * 7 + 2, "%3d", bf_memat(ui->bf, i+ui->offset));
-            mvprintw(3, i * 7 + 1, "%5d", i+ui->offset);
+            mvprintw(1, i * 7 + 2, "%3d", bf_memat(ui->bf, midx));
+            mvprintw(3, i * 7 + 1, "%5ld", midx);
             if (iscurrent)
                 attroff(COLOR_PAIR(2));
         }
@@ -134,7 +135,7 @@ tui_run(struct tui *ui)
         /* draw output */
         tui_draw_instruction(ui);
 
-        mvprintw(11, 0, "output : %s", ui->bf->out);
+        mvprintw(11, 0, "output : %s", ui->bf->out->b);
 
         refresh();
         ch = getch();

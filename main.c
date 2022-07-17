@@ -3,38 +3,33 @@
 #include <stdnoreturn.h>
 #include <stdlib.h>
 #include "bf.h"
+#include "str.h"
 #include "tui.h"
+#include "xmalloc.h"
 
 char *argv0;
 
-char
-*readstdin()
+struct string*
+readstdin()
 {
-    size_t cap = 1024;
+    struct string *str = str_init();
     char buf[1024] = { 0 };
-    char *s = malloc(cap);
-    size_t len = 0;
-    while (fgets(buf, sizeof buf, stdin)) {
-        size_t blen = strlen(buf);
-        strcpy(s+len, buf);
-        s = realloc(s, cap += blen);
-        len += blen;
-    }
-    s[len] = 0;
-    return s;
+    while (fgets(buf, sizeof buf, stdin))
+        str_push(str, buf);
+    return str;
 }
 
-char
-*readfile(const char *file)
+struct string*
+readfile(const char *file)
 {
     FILE *f = fopen(file, "r");
     fseek(f, 0, SEEK_END);
     long fsize = ftell(f);
     fseek(f, 0, SEEK_SET);  /* same as rewind(f); */
-    char *s = malloc(fsize + 1);
+    char *s = xmalloc(fsize + 1);
     fread(s, fsize, 1, f);
     fclose(f);
-    return s;
+    return str_from_charp(s);
 }
 
 #define USAGE "Usage: %s FILE [options] \
@@ -65,25 +60,24 @@ main(int argc,
      char **argv)
 {
     argv0 = *argv;
-    char *program = NULL;
+    struct string *program = NULL;
 
-    for (int i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i++)
         if (!strcmp(argv[i], "-h"))
             print_usage();
         else if (!strcmp(argv[i], "-v"))
             print_usage();
         else
             program = readfile(argv[i]);
-    }
 
     if (program == NULL) 
         program = readstdin();
 
-    bf *bf = bf_init(program);
-
-    tui_run(tui_init(bf));
-
-    free(program);
+    tui_run(
+            tui_init(
+                bf_init(program)
+                )
+           );
 
     return EXIT_SUCCESS;
 }

@@ -4,40 +4,42 @@
 
 #define MSIZE 30000
 
-typedef struct {
-    char *program;
+struct bf {
     char *iptr;
     Stack *loop;
     unsigned char mem[MSIZE];
-    size_t outcap, outlen;
-    char *out;
     unsigned char *dptr;
-    size_t program_len;
-} bf;
+    struct string *inst;
+    struct string *out;
+};
 
-bf *bf_init(char *program);
+struct bf *bf_init(struct string *inst);
 
-void bf_interpretone(bf *bf);
+void bf_interpretone(struct bf *bf);
 
-void bf_interpretall(bf *bf);
+void bf_interpretall(struct bf *bf);
 
-void bf_next_instruction(bf *bf);
+void bf_next_instruction(struct bf *bf);
 
-void bf_prev_instruction(bf *bf);
+void bf_prev_instruction(struct bf *bf);
 
-void bf_check_bound(bf *bf);
+void bf_check_bound(struct bf *bf);
 
-void bf_next_cell(bf *bf);
+void bf_next_cell(struct bf *bf);
 
-void bf_prev_cell(bf *bf);
+void bf_prev_cell(struct bf *bf);
 
-void bf_print(bf *bf);
+void bf_print(struct bf *bf);
 
-void bf_scan(bf *bf);
+void bf_scan(struct bf *bf);
 
-unsigned char bf_getmem(bf *bf);
+unsigned char bf_getmem(struct bf *bf);
 
-void bf_setmem(bf *bf, unsigned char n);
+void bf_setmem(struct bf *bf, unsigned char n);
 
-unsigned char bf_memat(bf *bf, size_t idx);
+unsigned char bf_memat(struct bf *bf, size_t idx);
+
+size_t bf_data_idx(struct bf *bf);
+
+size_t bf_inst_idx(struct bf *bf);
 

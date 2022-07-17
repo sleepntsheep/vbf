@@ -1,24 +1,23 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "str.h"
 #include "bf.h"
 #include "log.h"
+#include "xmalloc.h"
 
-bf *bf_init(char *program) {
-    bf *n =  calloc(1, sizeof(bf));
-    n->program = program;
+struct bf *bf_init(struct string *inst) {
+    struct bf *n =  xcalloc(1, sizeof(struct bf));
+    n->inst = inst;
     memset(n->mem, 0, sizeof n->mem);
     n->dptr = n->mem;
-    n->iptr = n->program;
-    n->program_len = strlen(program);
-    n->outlen = 0;
-    n->outcap = 1024;
-    n->out = malloc(n->outcap);
-    n->out[0] = '\0';
+    n->iptr = n->inst->b;
+    n->inst = inst;
+    n->out = str_init();
     return n;
 }
 
-void bf_interpretone(bf *bf) {
+void bf_interpretone(struct bf *bf) {
     switch (*bf->iptr) {
         case '+':
             (*bf->dptr)++;
@@ -70,65 +69,71 @@ void bf_interpretone(bf *bf) {
     bf->iptr++;
 }
 
-void bf_print(bf *bf) {
-    if (!(bf->outlen < bf->outcap - 2))
-        bf->out = realloc(bf->out, bf->outcap *= 2);
-    snprintf(bf->out+(bf->outlen++), 2,
-            "%c", bf_getmem(bf));
-    fputc(bf_getmem(bf), stdout);
+void bf_print(struct bf *bf) {
+    char c = bf_getmem(bf);
+    str_npush(bf->out, &c, 1);
+    fputc(c, stdout);
 }
 
-void bf_scan(bf *bf) {
+void bf_scan(struct bf *bf) {
     bf_setmem(bf, fgetc(stdin));
 }
 
-void bf_interpretall(bf *bf) {
+void bf_interpretall(struct bf *bf) {
     while (*bf->iptr != '\0')
         bf_interpretone(bf);
 }
 
-void bf_next_instruction(bf *bf) {
+void bf_next_instruction(struct bf *bf) {
     bf->iptr++;
     bf_check_bound(bf);
 }
 
-void bf_prev_instruction(bf *bf) {
+void bf_prev_instruction(struct bf *bf) {
     bf->iptr--;
     bf_check_bound(bf);
 }
 
-void bf_next_cell(bf *bf) {
+void bf_next_cell(struct bf *bf) {
     bf->dptr++;
     bf_check_bound(bf);
 }
 
-void bf_prev_cell(bf *bf) {
+void bf_prev_cell(struct bf *bf) {
     bf->dptr--;
     bf_check_bound(bf);
 }
 
-void bf_check_bound(bf *bf) {
-    if (bf->iptr < bf->program || bf->iptr > bf->program + bf->program_len) {
-        panic("instruction index out of bound (%d)", bf->iptr - bf->program_len);
-    }
-    if (bf->dptr < bf->mem || bf->dptr > bf->mem + MSIZE) {
-        panic("data index out of bound (%d)", bf->dptr - bf->mem);
-    }
+void bf_check_bound(struct bf *bf) {
+    size_t inst_index = bf_inst_idx(bf);
+    if (inst_index < 0 || inst_index >= bf->inst->l)
+        panic("instruction index out of bound (%d)", inst_index);
+    size_t data_index = bf_data_idx(bf);
+    if (data_index < 0 || data_index >= MSIZE)
+        panic("data index out of bound (%d)", data_index);
 }
 
-unsigned char bf_getmem(bf *bf) {
+unsigned char bf_getmem(struct bf *bf) {
     return *bf->dptr;
 }
 
-void bf_setmem(bf *bf, unsigned char n) {
+void bf_setmem(struct bf *bf, unsigned char n) {
     *bf->dptr = n;
 }
 
-unsigned char bf_memat(bf *bf, size_t idx) {
+unsigned char bf_memat(struct bf *bf, size_t idx) {
     if (idx < 0 || idx >= MSIZE) {
         warn("tried to access data out of bound (%d)", idx);
         return 0;
     }
     return bf->mem[idx];
+}
+
+size_t bf_data_idx(struct bf *bf) {
+    return bf->dptr - bf->mem;
+}
+
+size_t bf_inst_idx(struct bf *bf) {
+    return bf->iptr - bf->inst->b;
 }
 
