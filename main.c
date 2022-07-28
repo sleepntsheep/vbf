@@ -55,29 +55,47 @@ print_version()
     exit(EXIT_SUCCESS);
 }
 
+enum Mode {
+    NO_VISUAL,
+    TUI,
+    SDL2,
+};
+
 int
 main(int argc,
      char **argv)
 {
     argv0 = *argv;
     struct string *program = NULL;
+    enum Mode mode = NO_VISUAL;
 
     for (int i = 1; i < argc; i++)
         if (!strcmp(argv[i], "-h"))
             print_usage();
         else if (!strcmp(argv[i], "-v"))
             print_usage();
+        else if (!strcmp(argv[i], "-t"))
+            mode = TUI;
+        else if (!strcmp(argv[i], "-s"))
+            mode = SDL2;
         else
             program = readfile(argv[i]);
 
     if (program == NULL) 
         program = readstdin();
 
-    tui_run(
-            tui_init(
-                bf_init(program)
-                )
-           );
+    switch (mode)
+    {
+    case NO_VISUAL:
+        bf_interpretall(bf_init(program));
+        break;
+    case TUI:
+        tui_run(tui_init(bf_init(program)));
+        break;
+    case SDL2:
+        break;
+    }
 
     return EXIT_SUCCESS;
 }
+
