@@ -1,20 +1,42 @@
+#include <stdint.h>
 #include <stdlib.h>
 #include <ncurses.h>
 #include <stdbool.h>
-#include "log.h"
-#include "bf.h"
 #include "tui.h"
-#include "str.h"
-#include "xmalloc.h"
+
+/* datas */
+struct mousebutton {
+    char *text;
+    int x, y, w, h;
+    int slen;
+};
 
 struct tui *
 tui_init(struct bf *bf)
 {
-    struct tui *ui = xmalloc(sizeof(struct tui*));
+    struct tui *ui = xmalloc(sizeof(struct tui));
     ui->bf = bf;
     ui->offset = 0;
+    ui->run = false;
     return ui;
 }
+
+/* vars */
+const static struct mousebutton nextbutton = (struct mousebutton) { .text = "next", .x = 0,  .y = 5, .w = 6, .h = 2 };
+const static struct mousebutton rightbutton= (struct mousebutton) { .text = ">",    .x = 11, .y = 5, .w = 2, .h = 2 };
+const static struct mousebutton leftbutton = (struct mousebutton) { .text = "<",    .x = 8,  .y = 5, .w = 2, .h = 2 };
+const static struct mousebutton runbutton  = (struct mousebutton) { .text = "auto", .x = 15, .y = 5, .w = 6, .h = 2 };
+
+/* functions declaration */
+void tui_left(struct tui *ui);
+void tui_right(struct tui *ui);
+void tui_draw_instruction(struct tui *ui);
+void mousebutton_draw(struct mousebutton btn);
+bool mousebutton_isover(struct mousebutton btn, MEVENT m);
+void rect(WINDOW *win, int y1, int x1, int y2, int x2);
+int tui_draw(struct tui *ui);
+int tui_run(struct tui *ui);
+int tui_auto(struct tui *ui);
 
 void
 tui_left(struct tui *ui)
@@ -52,14 +74,9 @@ tui_draw_instruction(struct tui *ui)
     attroff(A_REVERSE);
 }
 
-struct mousebutton {
-    char *text;
-    int x, y, w, h;
-    int slen;
-};
-
 void
-mousebutton_draw(struct mousebutton btn) {
+mousebutton_draw(struct mousebutton btn)
+{
     attron(A_REVERSE);
     for (int i = 0; i < btn.h; i++) {
         mvprintw(i+btn.y, btn.x, "%.*s", btn.w, "                                                                                                ");
@@ -70,7 +87,8 @@ mousebutton_draw(struct mousebutton btn) {
 }
 
 bool
-mousebutton_isover(struct mousebutton btn, MEVENT m) {
+mousebutton_isover(struct mousebutton btn, MEVENT m)
+{
     return m.x >= btn.x &&
            m.y >= btn.y &&
            m.x <= btn.x + btn.w &&
@@ -91,12 +109,50 @@ rect(WINDOW *win, int y1, int x1, int y2, int x2)
 }
 
 int
+tui_draw(struct tui *ui)
+{
+    erase();
+    getmaxyx(stdscr, ui->h, ui->w);
+
+    ui->ncell = ui->w / 7;
+
+    /* draw cells */
+    for (int i = 0; i < ui->ncell; i++) {
+        size_t midx = i + ui->offset;
+        bool iscurrent = midx == bf_data_idx(ui->bf);
+        if (iscurrent)
+            attron(COLOR_PAIR(2));
+        rect(stdscr, 0, i * 7, 2, i * 7 + 6);
+        mvprintw(1, i * 7 + 2, "%3d", bf_memat(ui->bf, midx));
+        mvprintw(3, i * 7 + 1, "%5ld", midx);
+        if (iscurrent)
+            attroff(COLOR_PAIR(2));
+    }
+
+    mousebutton_draw(nextbutton);
+    mousebutton_draw(rightbutton);
+    mousebutton_draw(leftbutton);
+    if (ui->run)
+        attron(COLOR_PAIR(2));
+    mousebutton_draw(runbutton);
+    attroff(COLOR_PAIR(2));
+
+    /* draw output */
+    tui_draw_instruction(ui);
+
+    mvprintw(11, 0, "output : %s", ui->bf->out->b);
+
+    refresh();
+
+    return 0;
+}
+
+int
 tui_run(struct tui *ui)
 {
     int ch;
     mmask_t old;
     initscr();
-    keypad(stdscr, true);
     noecho();
     curs_set(0);
     start_color();
@@ -104,40 +160,14 @@ tui_run(struct tui *ui)
     mousemask (ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, &old);
     clear();
     refresh();
-
-    struct mousebutton nextbutton = (struct mousebutton) { .text = "next", .x = 0,  .y = 5, .w = 6, .h = 2 };
-    struct mousebutton rightbutton= (struct mousebutton) { .text = ">",    .x = 11, .y = 5, .w = 2, .h = 2 };
-    struct mousebutton leftbutton = (struct mousebutton) { .text = "<",    .x = 7,  .y = 5, .w = 2, .h = 2 };
+    keypad(stdscr, true);
+    nodelay(stdscr, true);
 
     for (;;) {
-        erase();
-        getmaxyx(stdscr, ui->h, ui->w);
+        if (ui->run) 
+            bf_interpretone(ui->bf);
 
-        ui->ncell = ui->w / 7;
-
-        /* draw cells */
-        for (int i = 0; i < ui->ncell; i++) {
-            size_t midx = i + ui->offset;
-            bool iscurrent = midx == bf_data_idx(ui->bf);
-            if (iscurrent)
-                attron(COLOR_PAIR(2));
-            rect(stdscr, 0, i * 7, 2, i * 7 + 6);
-            mvprintw(1, i * 7 + 2, "%3d", bf_memat(ui->bf, midx));
-            mvprintw(3, i * 7 + 1, "%5ld", midx);
-            if (iscurrent)
-                attroff(COLOR_PAIR(2));
-        }
-
-        mousebutton_draw(nextbutton);
-        mousebutton_draw(rightbutton);
-        mousebutton_draw(leftbutton);
-
-        /* draw output */
-        tui_draw_instruction(ui);
-
-        mvprintw(11, 0, "output : %s", ui->bf->out->b);
-
-        refresh();
+        tui_draw(ui);
         ch = getch();
 
         switch (ch) {
@@ -166,10 +196,13 @@ tui_run(struct tui *ui)
                     tui_right(ui);
                 if (mousebutton_isover(leftbutton, mev))
                     tui_left(ui);
+                if (mousebutton_isover(runbutton, mev))
+                    ui->run ^= 1;
             }
             default:
                 break;
         }
+        napms(10);
     }
 
     return 0;

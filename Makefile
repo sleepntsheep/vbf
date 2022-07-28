@@ -2,5 +2,5 @@ LIBS = -lncurses
 
 all: vbf
 
-vbf: *.c
+vbf: *.c backend/*.c
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)

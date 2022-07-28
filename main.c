@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include "bf.h"
 #include "str.h"
-#include "tui.h"
+#include "backend/tui.h"
 #include "xmalloc.h"
 
 char *argv0;
@@ -84,13 +84,15 @@ main(int argc,
     if (program == NULL) 
         program = readstdin();
 
+    struct bf *bf = bf_init(program);
+
     switch (mode)
     {
     case NO_VISUAL:
-        bf_interpretall(bf_init(program));
+        bf_interpretall(bf);
         break;
     case TUI:
-        tui_run(tui_init(bf_init(program)));
+        tui_run(tui_init(bf));
         break;
     case SDL2:
         break;
