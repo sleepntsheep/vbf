@@ -1,3 +1,4 @@
+#ifdef HAVE_SDL2
 #pragma once
 
 #include <stdbool.h>
@@ -49,3 +50,4 @@ int gui_render(struct gui *ui);
 void gui_button_draw(struct gui *ui, struct gui_button b);
 bool gui_button_isover(struct gui_button btn, int x, int y);
 
+#endif /* HAVE_SDL2 */

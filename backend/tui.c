@@ -1,3 +1,5 @@
+#ifdef HAVE_NCURSES
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <ncurses.h>
@@ -208,3 +210,5 @@ tui_run(struct tui *ui)
     return 0;
 }
 
+
+#endif

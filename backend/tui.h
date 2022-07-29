@@ -1,3 +1,4 @@
+#ifdef HAVE_NCURSES
 #pragma once
 
 #include <stdbool.h>
@@ -17,5 +18,4 @@ struct tui *tui_init(struct bf *bf);
 
 int tui_run(struct tui *ui);
 
-
-
+#endif

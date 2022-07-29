@@ -1,3 +1,5 @@
+#ifdef HAVE_SDL2
+
 #include "gui.h"
 #include "font.h"
 #include "../str.h"
@@ -250,3 +252,4 @@ gui_button_isover(struct gui_button b,
         && y <= b.y + b.h;
 }
 
+#endif /* HAVE_SDL2 */

@@ -4,10 +4,14 @@
 #include <stdlib.h>
 #include "bf.h"
 #include "str.h"
-#include "backend/tui.h"
-#include "backend/gui.h"
 #include "log.h"
 #include "xmalloc.h"
+#ifdef HAVE_NCURSES
+#include "backend/tui.h"
+#endif
+#ifdef HAVE_SDL2
+#include "backend/gui.h"
+#endif
 
 char *argv0;
 
@@ -103,9 +107,12 @@ main(int argc,
     case NO_VISUAL:
         bf_interpretall(bf);
         break;
+#ifdef HAVE_NCURSES
     case TUI:
         tui_run(tui_init(bf));
         break;
+#endif
+#ifdef HAVE_SDL2
     case SDL2:
         {
             struct gui *gui = gui_init(bf);
@@ -113,6 +120,10 @@ main(int argc,
             free(gui);
             break;
         }
+#endif
+    default:
+        info("mode (%d) not handled, maybe vbf wasn't compiled with the right flags", mode);
+        break;
     }
 
     return EXIT_SUCCESS;
