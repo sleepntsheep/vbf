@@ -12,7 +12,7 @@ installation:
     sudo cp ./vbf /usr/local/bin
 
 ** if you're compiling in windows, where ncurses might not be present
-    cmake .. -G "MinGW Makefiles" -DHAVE_NCURSES=0
+   pass -DHAVE_NCURSES=0 to cmake
 
 todo:
     take input from user in ncurses
