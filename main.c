@@ -5,6 +5,8 @@
 #include "bf.h"
 #include "str.h"
 #include "backend/tui.h"
+#include "backend/gui.h"
+#include "log.h"
 #include "xmalloc.h"
 
 char *argv0;
@@ -76,13 +78,16 @@ main(int argc,
             print_usage();
         else if (!strcmp(argv[i], "-t"))
             mode = TUI;
-        else if (!strcmp(argv[i], "-s"))
+        else if (!strcmp(argv[i], "-g"))
             mode = SDL2;
         else
             program = readfile(argv[i]);
 
-    if (program == NULL) 
+    if (program == NULL)
+    {
+        info("no file specified, reading from stdin");
         program = readstdin();
+    }
 
     struct bf *bf = bf_init(program);
 
@@ -95,7 +100,12 @@ main(int argc,
         tui_run(tui_init(bf));
         break;
     case SDL2:
-        break;
+        {
+            struct gui *gui = gui_init(bf);
+            gui_run(gui);
+            free(gui);
+            break;
+        }
     }
 
     return EXIT_SUCCESS;
