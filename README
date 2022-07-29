@@ -2,7 +2,20 @@ brainf**k interpreter and visualizer in C
 
 note: this is early WIP, the code is horrible and don't read it please
 
+installation:
+    git clone https://github.com/sleepntsheep/vbf
+    cd vbf
+    mkdir build
+    cd build
+    cmake ..
+    make
+    sudo cp ./vbf /usr/local/bin
+
+** if you're compiling in windows, where ncurses might not be present
+   pass -DHAVE_NCURSES=0 to cmake
+
 todo:
     take input from user in ncurses
     SDL2 backend
     refactor code
+
