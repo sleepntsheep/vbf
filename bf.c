@@ -73,6 +73,7 @@ void bf_print(struct bf *bf) {
     char c = bf_getmem(bf);
     str_npush(bf->out, &c, 1);
     fputc(c, stdout);
+    fflush(stdout);
 }
 
 void bf_scan(struct bf *bf) {
