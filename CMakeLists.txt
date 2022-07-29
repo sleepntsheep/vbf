@@ -17,6 +17,12 @@ add_executable(vbf
     backend/gui.c
 )
 
+set_property(TARGET vbf PROPERTY C_STANDARD 99)
+
+if (WIN32 OR MINGW32)
+    target_link_libraries(vbf PUBLIC mingw32)
+endif()
+
 if(HAVE_NCURSES)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_NCURSES")
     target_link_libraries(vbf PUBLIC ncurses)
@@ -24,6 +30,7 @@ endif()
 
 if (HAVE_SDL2)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_SDL2")
-    target_link_libraries(vbf PUBLIC SDL2 SDL2_ttf)
+    target_link_libraries(vbf PUBLIC SDL2main SDL2 SDL2_ttf)
 endif()
+
 
