@@ -5,7 +5,7 @@
 #include "tui.h"
 
 /* datas */
-struct mousebutton {
+struct tui_button {
     char *text;
     int x, y, w, h;
     int slen;
@@ -22,17 +22,17 @@ tui_init(struct bf *bf)
 }
 
 /* vars */
-const static struct mousebutton nextbutton = (struct mousebutton) { .text = "next", .x = 0,  .y = 5, .w = 6, .h = 2 };
-const static struct mousebutton rightbutton= (struct mousebutton) { .text = ">",    .x = 11, .y = 5, .w = 2, .h = 2 };
-const static struct mousebutton leftbutton = (struct mousebutton) { .text = "<",    .x = 8,  .y = 5, .w = 2, .h = 2 };
-const static struct mousebutton runbutton  = (struct mousebutton) { .text = "auto", .x = 15, .y = 5, .w = 6, .h = 2 };
+const static struct tui_button nextbutton = (struct tui_button) { .text = "next", .x = 0,  .y = 5, .w = 6, .h = 2 };
+const static struct tui_button rightbutton= (struct tui_button) { .text = ">",    .x = 11, .y = 5, .w = 2, .h = 2 };
+const static struct tui_button leftbutton = (struct tui_button) { .text = "<",    .x = 8,  .y = 5, .w = 2, .h = 2 };
+const static struct tui_button runbutton  = (struct tui_button) { .text = "auto", .x = 15, .y = 5, .w = 6, .h = 2 };
 
 /* functions declaration */
 void tui_left(struct tui *ui);
 void tui_right(struct tui *ui);
 void tui_draw_instruction(struct tui *ui);
-void mousebutton_draw(struct mousebutton btn);
-bool mousebutton_isover(struct mousebutton btn, MEVENT m);
+void tui_button_draw(struct tui_button btn);
+bool tui_button_isover(struct tui_button btn, MEVENT m);
 void rect(WINDOW *win, int y1, int x1, int y2, int x2);
 int tui_draw(struct tui *ui);
 int tui_run(struct tui *ui);
@@ -75,7 +75,7 @@ tui_draw_instruction(struct tui *ui)
 }
 
 void
-mousebutton_draw(struct mousebutton btn)
+tui_button_draw(struct tui_button btn)
 {
     attron(A_REVERSE);
     for (int i = 0; i < btn.h; i++) {
@@ -87,7 +87,7 @@ mousebutton_draw(struct mousebutton btn)
 }
 
 bool
-mousebutton_isover(struct mousebutton btn, MEVENT m)
+tui_button_isover(struct tui_button btn, MEVENT m)
 {
     return m.x >= btn.x &&
            m.y >= btn.y &&
@@ -129,12 +129,12 @@ tui_draw(struct tui *ui)
             attroff(COLOR_PAIR(2));
     }
 
-    mousebutton_draw(nextbutton);
-    mousebutton_draw(rightbutton);
-    mousebutton_draw(leftbutton);
+    tui_button_draw(nextbutton);
+    tui_button_draw(rightbutton);
+    tui_button_draw(leftbutton);
     if (ui->run)
         attron(COLOR_PAIR(2));
-    mousebutton_draw(runbutton);
+    tui_button_draw(runbutton);
     attroff(COLOR_PAIR(2));
 
     /* draw output */
@@ -190,13 +190,13 @@ tui_run(struct tui *ui)
                 MEVENT mev;
                 if ((getmouse(&mev)) != OK)
                     warn("getmouse: error getting mouse event");
-                if (mousebutton_isover(nextbutton, mev))
+                if (tui_button_isover(nextbutton, mev))
                     bf_interpretone(ui->bf);
-                if (mousebutton_isover(rightbutton, mev))
+                if (tui_button_isover(rightbutton, mev))
                     tui_right(ui);
-                if (mousebutton_isover(leftbutton, mev))
+                if (tui_button_isover(leftbutton, mev))
                     tui_left(ui);
-                if (mousebutton_isover(runbutton, mev))
+                if (tui_button_isover(runbutton, mev))
                     ui->run ^= 1;
             }
             default:

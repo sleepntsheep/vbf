@@ -1,16 +1,36 @@
 #include "gui.h"
+#include "font.h"
+#include "../str.h"
 #include "../utils.h"
 #include "../xmalloc.h"
 #include "../bf.h"
 #include "../log.h"
-#include "font.h"
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_rwops.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_ttf.h>
 
+#define isover(b) gui_button_isover(btns[(b)], x, y)
+
 bool sdl_inited = false;
+
+char program[100];
+
+static struct gui_button btns[] = {
+    { "Auto",  gpadx,  180, 120, 80, {gray}, {white}},
+    { "Left",  gpadx,  280, 120, 80, {gray}, {white}},
+    { "Right", 190,    280, 120, 80, {gray}, {white}},
+    { "Next",  gpadx,  380, 120, 80, {gray}, {white}},
+    { program, gpadx,  500, gwidth-2*gpadx, 80, {gray}, {white}},
+};
+
+enum GuiButtons {
+    AutoBtn,
+    LeftBtn,
+    RightBtn,
+    NextBtn,
+};
 
 struct gui *
 gui_init(struct bf *bf)
@@ -20,7 +40,7 @@ gui_init(struct bf *bf)
     ui->offset = 0;
     ui->auto_run = false;
     ui->running = true;
-    ui->w = 800; ui->h = 600;
+    ui->w = gwidth; ui->h = gheight;
     if (!sdl_inited)
     {
         if (SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -77,6 +97,7 @@ gui_update(struct gui *ui)
 {
     if (ui->auto_run)
         bf_interpretone(ui->bf);
+    snprintf(program, sizeof program, "@: %.*s", 20, ui->bf->iptr);
     return 0;
 }
 
@@ -124,7 +145,19 @@ gui_input(struct gui *ui)
             }
             break;
         case SDL_MOUSEBUTTONDOWN:
+            {
+            int x, y;
+            SDL_GetMouseState(&x, &y);
+            if (isover(AutoBtn))
+                ui->auto_run ^= 1;
+            if (isover(LeftBtn))
+                gui_left(ui);
+            if (isover(RightBtn))
+                gui_right(ui);
+            if (isover(NextBtn))
+                bf_interpretone(ui->bf);
             break;
+            }
         case SDL_WINDOWEVENT:
             if (ev.window.event == SDL_WINDOWEVENT_RESIZED) {
                 ui->w = ev.window.data1;
@@ -137,16 +170,18 @@ gui_input(struct gui *ui)
 }
 
 int
-gui_drawtext(struct gui *ui, const char *s, int x, int y, SDL_Color clr)
+gui_drawtext(struct gui *ui, const char *s, int x, int y, SDL_Color clr, bool center)
 {
-    SDL_Surface *surface;
-    SDL_Texture *texture;
-    surface = TTF_RenderText_Blended(ui->font, s, clr);
-    texture = SDL_CreateTextureFromSurface(ui->rend, surface);
-    SDL_Rect message_rect = { x, y, surface->w, surface->h };
-    SDL_FreeSurface(surface);
-    SDL_RenderCopy(ui->rend, texture, NULL, &message_rect);
-    SDL_DestroyTexture(texture);
+    SDL_Surface *sf = TTF_RenderText_Blended(ui->font, s, clr);
+    SDL_Texture *tex = SDL_CreateTextureFromSurface(ui->rend, sf);
+    SDL_Rect mr = { x, y, sf->w, sf->h };
+    if (center) {
+        mr.x -= sf->w / 2;
+        mr.y -= sf->h / 2;
+    }
+    SDL_FreeSurface(sf);
+    SDL_RenderCopy(ui->rend, tex, NULL, &mr);
+    SDL_DestroyTexture(tex);
     return 0;
 }
 
@@ -169,12 +204,15 @@ gui_render(struct gui *ui)
             textclr = (SDL_Color){green};
         }
         gui_drawtext(ui, itoa(bf_memat(ui->bf, l)),
-                lpad+5, upad+5, textclr);
+                lpad+5, upad+5, textclr, false);
         gui_drawtext(ui, itoa(l),
-                lpad+5, upad+5+gcw, textclr);
+                lpad+5, upad+5+gcw, textclr, false);
         SDL_Rect r = {lpad, upad, gcw, gcw};
         SDL_RenderDrawRect(ui->rend, &r);
     }
+    btns[AutoBtn].bg = (ui->auto_run ? (struct color){green} : (struct color){gray});
+    for (int i = 0; i < LENGTH(btns); i++)
+        gui_button_draw(ui, btns[i]);
     
     SDL_RenderPresent(ui->rend);
     return 0;
@@ -192,5 +230,23 @@ gui_run(struct gui *ui)
         gui_render(ui);
         SDL_Delay(1000/60);
     }
+}
+
+void
+gui_button_draw(struct gui *ui, struct gui_button b)
+{
+    SDL_SetRenderDrawColor(ui->rend, RGBA(b.bg));
+    SDL_Rect r = { b.x, b.y, b.w, b.h };
+    SDL_RenderFillRect(ui->rend, &r);
+    gui_drawtext(ui, b.text, b.x+b.w/2, b.y+b.h/2, (SDL_Color){RGBA(b.fg)}, true);
+}
+
+bool
+gui_button_isover(struct gui_button b,
+        int x, int y)
+{
+    return x >= b.x && y >= b.y 
+        && x <= b.x + b.w
+        && y <= b.y + b.h;
 }
 

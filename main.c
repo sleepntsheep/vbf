@@ -25,6 +25,11 @@ struct string*
 readfile(const char *file)
 {
     FILE *f = fopen(file, "r");
+    if (f == NULL)
+    {
+        warn("can't open file (%s)", file);
+        return NULL;
+    }
     fseek(f, 0, SEEK_END);
     long fsize = ftell(f);
     fseek(f, 0, SEEK_SET);  /* same as rewind(f); */
@@ -34,12 +39,14 @@ readfile(const char *file)
     return str_from_charp(s);
 }
 
-#define USAGE "Usage: %s FILE [options] \
-                \
-                Options:\
-                \t-h          display this help and exit\
-                \t-v          output version and exit\
-                "
+#define USAGE "Usage: %s [FILE] [options] \
+\n\
+Options:\n\
+\t-h          display this help and exit\n\
+\t-v          output version and exit\n\
+\t-t          visualize with ncurses tui backend\n\
+\t-g          visualize with sdl2 gui backend\n\
+"
 
 #define VERSION "0.1.0"
 
