@@ -205,9 +205,9 @@ gui_render(struct gui *ui)
             SDL_SetRenderDrawColor(ui->rend, green);
             textclr = (SDL_Color){green};
         }
-        gui_drawtext(ui, itoa(bf_memat(ui->bf, l)),
+        gui_drawtext(ui, s_itoa(bf_memat(ui->bf, l)),
                 lpad+5, upad+5, textclr, false);
-        gui_drawtext(ui, itoa(l),
+        gui_drawtext(ui, s_itoa(l),
                 lpad+5, upad+5+gcw, textclr, false);
         SDL_Rect r = {lpad, upad, gcw, gcw};
         SDL_RenderDrawRect(ui->rend, &r);
