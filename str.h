@@ -1,4 +1,7 @@
 #pragma once
+#ifndef S_STR_H
+#define S_STR_H
+
 #include <stddef.h>
 
 struct string {
@@ -14,3 +17,4 @@ void str_push(struct string *s, char *n);
 
 void str_npush(struct string *s, char *n, size_t len);
 
+#endif /* S_STR_H */

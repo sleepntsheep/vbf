@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <stdnoreturn.h>
 #include <stdlib.h>
 #include "bf.h"
 #include "str.h"
@@ -43,25 +42,24 @@ readfile(const char *file)
     return str_from_charp(s);
 }
 
-#define USAGE "Usage: %s [FILE] [options] \
-\n\
-Options:\n\
-\t-h          display this help and exit\n\
-\t-v          output version and exit\n\
-\t-t          visualize with ncurses tui backend\n\
-\t-g          visualize with sdl2 gui backend\n\
-"
+#define USAGE "Usage: %s [FILE] [options]" \
+"\n" \
+"Options:\n" \
+"\t-h          display this help and exit\n" \
+"\t-v          output version and exit\n" \
+"\t-t          visualize with ncurses tui backend\n" \
+"\t-n 	       interpret without visualizing\n"
 
-#define VERSION "0.1.0"
+#define VERSION "0.1.1"
 
-noreturn void
+_Noreturn void
 print_usage()
 {
     printf(USAGE, argv0);
     exit(EXIT_SUCCESS);
 }
 
-noreturn void
+_Noreturn void
 print_version()
 {
     printf(VERSION);
@@ -81,7 +79,11 @@ main
 {
     argv0 = *argv;
     struct string *program = NULL;
+#if HAVE_SDL2
+    enum Mode mode = SDL2;
+#else
     enum Mode mode = NO_VISUAL;
+#endif
 
     for (int i = 1; i < argc; i++)
         if (!strcmp(argv[i], "-h"))
@@ -90,8 +92,8 @@ main
             print_usage();
         else if (!strcmp(argv[i], "-t"))
             mode = TUI;
-        else if (!strcmp(argv[i], "-g"))
-            mode = SDL2;
+        else if (!strcmp(argv[i], "-n"))
+            mode = NO_VISUAL;
         else
             program = readfile(argv[i]);
 

@@ -3,7 +3,6 @@
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <stdnoreturn.h>
 #define va(x) \
         va_list a; \
         va_start(a, fmt); \

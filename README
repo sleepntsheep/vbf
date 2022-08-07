@@ -1,7 +1,5 @@
 brainf**k interpreter and visualizer in C
 
-note: this is early WIP, the code is horrible and don't read it please
-
 installation:
     git clone https://github.com/sleepntsheep/vbf
     cd vbf
@@ -15,7 +13,5 @@ installation:
     cmake .. -G "MinGW Makefiles" -DHAVE_NCURSES=0
 
 todo:
-    take input from user in ncurses
-    SDL2 backend
-    refactor code
+    [ ] take input from user in ncurses
 

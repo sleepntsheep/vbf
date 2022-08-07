@@ -18,7 +18,7 @@ struct string *str_from_charp(char *p) {
 }
 
 void str_push(struct string *s, char *n) {
-    int nlen = strlen(n);
+    size_t nlen = strlen(n);
     if (s->l + nlen >= s->c) {
         while (s->l + nlen >= s->c)
             s->c *= 2;

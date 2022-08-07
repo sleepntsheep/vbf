@@ -1,10 +1,10 @@
 #ifdef HAVE_SDL2
 #pragma once
 
+#define SDL_MAIN_HANDLED
 #include <stdbool.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_video.h>
 
 #define RGBA(x) (x).r,(x).g,(x).b,(x).a
 #define black 0,0,0,255
@@ -30,7 +30,7 @@ struct gui {
 };
 
 struct color {
-    uint8_t r, g, b, a;
+    unsigned char r, g, b, a;
 };
 
 struct gui_button {

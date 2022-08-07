@@ -7,11 +7,6 @@
 #include "../xmalloc.h"
 #include "../bf.h"
 #include "../log.h"
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL_rwops.h>
-#include <SDL2/SDL_video.h>
-#include <SDL2/SDL_ttf.h>
 
 #define isover(b) gui_button_isover(btns[(b)], x, y)
 

@@ -1,11 +1,12 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.21)
 
 project(vbf VERSION 0.1.0 LANGUAGES C)
 
 option(HAVE_NCURSES "ncurses.h" ON)
 option(HAVE_SDL2 "SDL2/SDL.h, SDL2/SDL_ttf.h" ON)
 
-add_executable(vbf 
+
+set (source
     main.c
     bf.c
     log.c
@@ -17,10 +18,19 @@ add_executable(vbf
     backend/gui.c
 )
 
-set_property(TARGET vbf PROPERTY C_STANDARD 99)
+add_executable(vbf 
+	${source}
+)
 
-if (WIN32 OR MINGW32)
+set_property(TARGET vbf PROPERTY C_STANDARD 11)
+
+if (MINGW32)
     target_link_libraries(vbf PUBLIC mingw32)
+endif()
+
+if (HAVE_SDL2)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_SDL2")
+    target_link_libraries(vbf PUBLIC SDL2main SDL2 SDL2_ttf)
 endif()
 
 if(HAVE_NCURSES)
@@ -28,9 +38,5 @@ if(HAVE_NCURSES)
     target_link_libraries(vbf PUBLIC ncurses)
 endif()
 
-if (HAVE_SDL2)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_SDL2")
-    target_link_libraries(vbf PUBLIC SDL2main SDL2 SDL2_ttf)
-endif()
 
 

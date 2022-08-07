@@ -1,4 +1,7 @@
 #pragma once
+#ifndef S_BF_H
+#define S_BF_H
+
 #include <stddef.h>
 #include "stack.h"
 
@@ -43,3 +46,4 @@ size_t bf_data_idx(struct bf *bf);
 
 size_t bf_inst_idx(struct bf *bf);
 
+#endif /* S_BF_H */
